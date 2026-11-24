@@ -1,0 +1,37 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Dinner Dice"><meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#fdf6d8"><link rel="apple-touch-icon" href="icon-180.png"><link rel="manifest" href="manifest.json">
+<title>Dinner Dice</title><style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;min-height:100vh;font-family:-apple-system,system-ui,sans-serif;background:#fdf6d8;color:#2b3a2e;display:flex;flex-direction:column;align-items:center;padding:calc(env(safe-area-inset-top) + 24px) 20px calc(env(safe-area-inset-bottom) + 24px);text-align:center}
+h1{font-weight:700;font-size:30px;margin:8px 0 4px}.sub{color:#6b7a6e;margin:0 0 28px}
+#die{font-size:96px;line-height:1;margin:10px 0 18px;display:inline-block}
+.roll{animation:spin .7s ease-out}@keyframes spin{0%{transform:rotate(0) scale(1)}50%{transform:rotate(380deg) scale(1.25)}100%{transform:rotate(720deg) scale(1)}}
+#meal{min-height:96px;font-size:30px;font-weight:600;display:flex;align-items:center;justify-content:center;padding:0 8px;color:#3f6b4a}
+button{font:inherit;border:0;border-radius:18px;padding:20px;width:100%;max-width:360px;font-size:22px;font-weight:700;margin:8px 0}
+#go{background:#3f6b4a;color:#fff}#yes{background:#e9a6b4;color:#3b1f27;display:none}
+#list{margin-top:26px;width:100%;max-width:360px;text-align:left}summary{color:#6b7a6e;cursor:pointer;padding:8px 0}
+ol{padding-left:28px;line-height:1.7}li.recent{color:#aab3ab;text-decoration:line-through}
+.note{font-size:13px;color:#8a958c}</style></head><body>
+<h1>Dinner Dice</h1><p class="sub">What's for dinner tonight?</p>
+<div id="die">🎲</div><div id="meal">Tap roll!</div>
+<button id="go">Roll</button><button id="yes">Let's make it! ✓</button>
+<details id="list"><summary>See all dinners</summary><p class="note">Crossed out = made in the last week, so the dice skip it.</p><ol id="ol"></ol></details>
+<script>
+const MEALS=["Potato taco bowls", "Potato soup", "Chili", "Pasta w/ tomato sauce & ground beef", "Spaghetti + alfredo sauce", "Chicken cutlets + veggies", "Pancakes, eggs, bacon/sausage", "Pot roast", "Beef stew", "Steak, potatoes, veggies", "OG soup", "Chicken enchiladas", "Taco casserole", "Steak bites", "Sausage sheet pan", "Teriyaki chicken", "Marry me chicken + gnocchi", "Tacos", "Breakfast tacos/burritos", "Homemade hamburger helper", "Sausage and rice", "Chicken alfredo", "Steak alfredo", "Loaded baked potatoes", "Waffles, eggs, bacon/sausage", "Grilled cheese and soup", "Steak burrito bowls", "Sloppy joes", "Breakfast casserole", "Chicken broccoli rice cheddar casserole", "Hamburgers", "Brisket", "Honey ham + veggies", "Chicken caesar salad", "Meatball subs", "French dip sandwiches"];
+const KEY="dd_history_v1",DAYS=7;
+const hist=()=>{try{return JSON.parse(localStorage.getItem(KEY))||{}}catch(e){return{}}};
+const recent=()=>{const h=hist(),cut=Date.now()-DAYS*864e5;return new Set(Object.keys(h).filter(m=>h[m]>cut))};
+function drawList(){const r=recent();document.getElementById('ol').innerHTML=MEALS.map(m=>`<li class="${r.has(m)?'recent':''}">${m}</li>`).join('')}
+let current=null,last=null;
+const die=document.getElementById('die'),meal=document.getElementById('meal'),go=document.getElementById('go'),yes=document.getElementById('yes');
+go.onclick=()=>{const r=recent();let pool=MEALS.filter(m=>!r.has(m)&&m!==last);if(!pool.length)pool=MEALS.filter(m=>m!==last);
+ current=pool[Math.floor(Math.random()*pool.length)];last=current;
+ die.classList.remove('roll');void die.offsetWidth;die.classList.add('roll');go.disabled=true;
+ let n=0;const t=setInterval(()=>{meal.textContent=MEALS[Math.floor(Math.random()*MEALS.length)];if(++n>9){clearInterval(t);meal.textContent=current;go.textContent='Roll again';go.disabled=false;yes.style.display='block'}},65)};
+yes.onclick=()=>{const h=hist();h[current]=Date.now();localStorage.setItem(KEY,JSON.stringify(h));yes.style.display='none';meal.textContent=current+' 🍽️';drawList()};
+drawList();
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
+</script></body></html>
